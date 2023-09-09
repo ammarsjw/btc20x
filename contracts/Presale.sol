@@ -9,14 +9,15 @@ interface IBEP20 {
 
     function balanceOf(address account) external view returns (uint256);
 
-    function transfer(address recipient, uint256 amount)
-        external
-        returns (bool);
+    function transfer(
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
 
-    function allowance(address owner, address spender)
-        external
-        view
-        returns (uint256);
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
 
     function approve(address spender, uint256 amount) external returns (bool);
 
@@ -35,6 +36,73 @@ interface IBEP20 {
     );
 }
 
+library SafeMath {
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
+    }
+
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+
+    function sub(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) {
+            return 0;
+        }
+
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    function div(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    function mod(
+        uint256 a,
+        uint256 b,
+        string memory errorMessage
+    ) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
+    }
+}
+
 interface AggregatorV3Interface {
     function decimals() external view returns (uint8);
 
@@ -42,7 +110,9 @@ interface AggregatorV3Interface {
 
     function version() external view returns (uint256);
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(
+        uint80 _roundId
+    )
         external
         view
         returns (
@@ -113,25 +183,24 @@ contract PreSale {
         // TODO change to 0x55d398326f99059fF775485246999027B3197955
         USDT = IBEP20(0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C);
         // TODO change to 0xC5A35FC58EFDC4B88DDCA51AcACd2E8F593504bE
-        priceFeedBnb = AggregatorV3Interface(0xb39B176130aCFd652F228D45b634A5fB1bE3bb11);
+        priceFeedBnb = AggregatorV3Interface(
+            0xb39B176130aCFd652F228D45b634A5fB1bE3bb11
+        );
         referrerPercentage = 10_00;
         airDropRefPercentage = 0;
         percentageDivider = 100_00;
-        airDropAmount = 0 * (10 ** BTC20X.decimals());
-        tokenPerUsd = 10;
-        UsdtHardCap = 10000000 * (10 ** USDT.decimals());
-        tokenHardCap = 100000000 * (10 ** BTC20X.decimals());
-        minAmount = 500 * (10 ** BTC20X.decimals());
-        maxAmount = 50000000 * (10 ** BTC20X.decimals());
-        preSaleTime = block.timestamp + 300 days;
+        airDropAmount = 0;
+        tokenPerUsd = 1;
+        UsdtHardCap = type(uint256).max;
+        tokenHardCap = type(uint256).max;
+        minAmount = 0;
+        maxAmount = type(uint256).max;
+        preSaleTime = type(uint256).max;
     }
 
     function buyToken(uint256 _amount, address _referrer) public {
         UserInfo storage user = users[msg.sender];
         setReferrer(msg.sender, _referrer, _amount, true);
-        if (!user.isExists) {
-            user.isExists = true;
-        }
         uint256 numberOfTokens = usdtToToken(_amount);
 
         require(
@@ -183,24 +252,22 @@ contract PreSale {
 
     // to check number of BTC20X for given BNB
     function bnbToToken(uint256 _amount) public view returns (uint256) {
-        uint256 precision = 1e4;
-        uint256 bnbToUsd = precision.mul(_amount).mul(getLatestPriceBnb()).div(
-            1e18
-        );
-        uint256 numberOfTokens = bnbToUsd.mul(tokenPerUsd);
-        return numberOfTokens.mul((10 ** BTC20X.decimals())).div(precision);
+        uint256 numberOfTokens = _amount
+            .mul(getLatestPriceBnb())
+            .mul(tokenPerUsd)
+            .div(1e8);
+        return numberOfTokens;
     }
-
-    receive() external payable {}
 
     // to get real time price of BNB
     function getLatestPriceBnb() public view returns (uint256) {
         (, int256 price, , , ) = priceFeedBnb.latestRoundData();
-        return uint256(price).div(1e8);
+        return uint256(price);
     }
 
-    function bnbToUsdt(uint256 _value) public view returns (uint256 bnbToUsd) {
-        return bnbToUsd = (_value).mul(getLatestPriceBnb());
+    function bnbToUsdt(uint256 _value) public view returns (uint256) {
+        uint256 numberOfUSDT = _value.mul(getLatestPriceBnb()).div(1e8);
+        return numberOfUSDT;
     }
 
     function claim() public {
@@ -214,7 +281,7 @@ contract PreSale {
         if (user.referrerReward > 0) {
             BTC20X.transferFrom(owner, msg.sender, user.referrerReward);
         }
-        if (user.referrerReward > 0) {
+        if (user.claimAbleAmount > 0) {
             BTC20X.transferFrom(owner, msg.sender, user.claimAbleAmount);
         }
         user.claimAbleAmount = 0;
@@ -254,9 +321,9 @@ contract PreSale {
 
     function usdtToToken(uint256 _amount) public view returns (uint256) {
         uint256 numberOfTokens = _amount.mul(tokenPerUsd).div(
-            (10 ** USDT.decimals())
+            10 ** USDT.decimals()
         );
-        return numberOfTokens.mul((10 ** BTC20X.decimals()));
+        return numberOfTokens.mul(10 ** BTC20X.decimals());
     }
 
     function airDrop() external {
@@ -283,10 +350,10 @@ contract PreSale {
         airDropAmount = _amount * (10 ** BTC20X.decimals());
     }
 
-    function setPreSaleAmount(uint256 _minAmount, uint256 _maxAmount)
-        external
-        onlyOwner
-    {
+    function setPreSaleAmount(
+        uint256 _minAmount,
+        uint256 _maxAmount
+    ) external onlyOwner {
         minAmount = _minAmount;
         maxAmount = _maxAmount;
     }
@@ -306,20 +373,16 @@ contract PreSale {
         return true;
     }
 
-    function transferUSDTFunds(uint256 _value)
-        external
-        onlyOwner
-        returns (bool)
-    {
+    function transferUSDTFunds(
+        uint256 _value
+    ) external onlyOwner returns (bool) {
         USDT.transfer(owner, _value);
         return true;
     }
 
-    function transferStuckFunds(uint256 _value)
-        external
-        onlyOwner
-        returns (bool)
-    {
+    function transferStuckFunds(
+        uint256 _value
+    ) external onlyOwner returns (bool) {
         BTC20X.transfer(owner, _value);
         return true;
     }
@@ -350,7 +413,9 @@ contract PreSale {
         return BTC20X.allowance(owner, address(this));
     }
 
-    function getUserInfo(address _user)
+    function getUserInfo(
+        address _user
+    )
         public
         view
         returns (
@@ -391,72 +456,5 @@ contract PreSale {
         tokenHardCap = _tokenHardCap;
         UsdtHardCap = _UsdtHardCap;
         amountRaised = _amountRaised;
-    }
-}
-
-library SafeMath {
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a, "SafeMath: addition overflow");
-
-        return c;
-    }
-
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        return sub(a, b, "SafeMath: subtraction overflow");
-    }
-
-    function sub(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b <= a, errorMessage);
-        uint256 c = a - b;
-
-        return c;
-    }
-
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
-        uint256 c = a * b;
-        require(c / a == b, "SafeMath: multiplication overflow");
-
-        return c;
-    }
-
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        return div(a, b, "SafeMath: division by zero");
-    }
-
-    function div(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b > 0, errorMessage);
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
-    }
-
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        return mod(a, b, "SafeMath: modulo by zero");
-    }
-
-    function mod(
-        uint256 a,
-        uint256 b,
-        string memory errorMessage
-    ) internal pure returns (uint256) {
-        require(b != 0, errorMessage);
-        return a % b;
     }
 }
