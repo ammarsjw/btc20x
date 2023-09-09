@@ -18,7 +18,7 @@ async function main() {
     } else if (networkName == "mainnet") {
         usdtAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"
         aggregatorAddress = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
-        desiredGasPrice = 30
+        desiredGasPrice = 15
     } else if (networkName == "bsc") {
         usdtAddress = "0x55d398326f99059fF775485246999027B3197955"
         aggregatorAddress = "0xC5A35FC58EFDC4B88DDCA51AcACd2E8F593504bE"

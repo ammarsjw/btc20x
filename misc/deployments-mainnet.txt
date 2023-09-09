@@ -1,9 +1,19 @@
 Contracts:
+Chain: mainnet
+BTC20X deployed to: 0x8EC27B158E756aEE1444C3031C1f95a3569b089a
+at block number: 18101116
+Presale deployed to: 0x0B41415387A7a692e5721e3461b485febf61C796
+at block number: 18101117
+Chain: bsc
+BTC20X deployed to: 0x8EC27B158E756aEE1444C3031C1f95a3569b089a
+at block number: 31598774
+Presale deployed to: 0x0B41415387A7a692e5721e3461b485febf61C796
+at block number: 31598776
 
 Contracts:
 Chain: mainnet
-BTC20X - https://etherscan.io/address/#code
-Presale - https://etherscan.io/address/#code
+BTC20X - https://etherscan.io/address/0x8EC27B158E756aEE1444C3031C1f95a3569b089a#code
+Presale - https://etherscan.io/address/0x0B41415387A7a692e5721e3461b485febf61C796#code
 Chain: bsc
-BTC20X - https://bscscan.com/address/#code
-Presale - https://bscscan.com/address/#code
+BTC20X - https://bscscan.com/address/0x8EC27B158E756aEE1444C3031C1f95a3569b089a#code
+Presale - https://bscscan.com/address/0x0B41415387A7a692e5721e3461b485febf61C796#code

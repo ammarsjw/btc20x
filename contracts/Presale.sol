@@ -154,7 +154,7 @@ contract Presale {
     uint256 public airDropAmount;
     uint256 public minAmount;
     uint256 public maxAmount;
-    uint256 public preSaleTime;
+    uint256 public presaleTime;
     uint256 public soldToken;
     uint256 public tokenHardCap;
     uint256 public UsdtHardCap;
@@ -191,7 +191,7 @@ contract Presale {
         tokenHardCap = type(uint256).max;
         minAmount = 0;
         maxAmount = type(uint256).max;
-        preSaleTime = type(uint256).max;
+        presaleTime = type(uint256).max;
     }
 
     function buyToken(uint256 _amount, address _referrer) public {
@@ -208,7 +208,7 @@ contract Presale {
                 _amount + amountRaised <= UsdtHardCap,
             "Exceeding HardCap"
         );
-        require(block.timestamp < preSaleTime, "Presale: PreSale over");
+        require(block.timestamp < presaleTime, "Presale: Presale over");
         if (!user.isExists) {
             user.isExists = true;
             totalBuyer++;
@@ -220,7 +220,7 @@ contract Presale {
         emit BuyToken(msg.sender, usdtToToken(_amount));
     }
 
-    // to buy BTC20X during preSale time
+    // to buy BTC20X during presale time
     function buyWithETH(address _referrer) public payable {
         UserInfo storage user = users[msg.sender];
         setReferrer(msg.sender, _referrer, msg.value, false);
@@ -235,7 +235,7 @@ contract Presale {
                 ethToUsdt(msg.value) + amountRaised <= UsdtHardCap,
             "Exceeding HardCap"
         );
-        require(block.timestamp < preSaleTime, "Presale: PreSale over");
+        require(block.timestamp < presaleTime, "Presale: Presale over");
         if (!user.isExists) {
             user.isExists = true;
             totalBuyer++;
@@ -269,7 +269,7 @@ contract Presale {
     function claim() public {
         UserInfo storage user = users[msg.sender];
         require(user.isExists, "Didn't bought");
-        require(block.timestamp >= preSaleTime, "Wait for the PreSale endtime");
+        require(block.timestamp >= presaleTime, "Wait for the Presale endtime");
         require(
             user.referrerReward > 0 || user.claimAbleAmount > 0,
             "Amount Already claimed"
@@ -346,7 +346,7 @@ contract Presale {
         airDropAmount = _amount * (10 ** BTC20X.decimals());
     }
 
-    function setPreSaleAmount(
+    function setPresaleAmount(
         uint256 _minAmount,
         uint256 _maxAmount
     ) external onlyOwner {
@@ -354,8 +354,8 @@ contract Presale {
         maxAmount = _maxAmount;
     }
 
-    function setpreSaleTime(uint256 _time) external onlyOwner {
-        preSaleTime = _time;
+    function setPresaleTime(uint256 _time) external onlyOwner {
+        presaleTime = _time;
     }
 
     // transfer ownership
@@ -440,14 +440,14 @@ contract Presale {
 
     function setNewRound(
         uint256 _tokenPerUsd,
-        uint256 _preSaleTime,
+        uint256 _presaleTime,
         uint256 _soldToken,
         uint256 _tokenHardCap,
         uint256 _UsdtHardCap,
         uint256 _amountRaised
     ) public onlyOwner {
         tokenPerUsd = _tokenPerUsd;
-        preSaleTime = _preSaleTime;
+        presaleTime = _presaleTime;
         soldToken = _soldToken;
         tokenHardCap = _tokenHardCap;
         UsdtHardCap = _UsdtHardCap;
