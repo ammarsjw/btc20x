@@ -135,7 +135,7 @@ interface AggregatorV3Interface {
         );
 }
 
-contract PreSale {
+contract Presale {
     using SafeMath for uint256;
 
     IBEP20 public BTC20X;
