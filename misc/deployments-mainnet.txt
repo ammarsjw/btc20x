@@ -1,5 +1,9 @@
 Contracts:
 
 Contracts:
+Chain: mainnet
+BTC20X - https://etherscan.io/address/#code
+Presale - https://etherscan.io/address/#code
+Chain: bsc
 BTC20X - https://bscscan.com/address/#code
 Presale - https://bscscan.com/address/#code

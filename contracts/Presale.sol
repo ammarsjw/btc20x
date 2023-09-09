@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.7;
 
-interface IBEP20 {
+interface IERC20 {
     function decimals() external view returns (uint8);
 
     function totalSupply() external view returns (uint256);
@@ -138,10 +138,10 @@ interface AggregatorV3Interface {
 contract Presale {
     using SafeMath for uint256;
 
-    IBEP20 public BTC20X;
-    IBEP20 public USDT;
+    IERC20 public BTC20X;
+    IERC20 public USDT;
 
-    AggregatorV3Interface public priceFeedBnb;
+    AggregatorV3Interface public priceFeedETH;
 
     uint256 public totalBuyer;
 
@@ -171,21 +171,17 @@ contract Presale {
     mapping(address => UserInfo) users;
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "BEP20: Not an owner");
+        require(msg.sender == owner, "Presale: Not an owner");
         _;
     }
 
     event BuyToken(address _user, uint256 _amount);
 
-    constructor(address BTC20X_) {
+    constructor(address BTC20X_, address USDT_, address priceFeed_) {
         owner = payable(msg.sender);
-        BTC20X = IBEP20(BTC20X_);
-        // TODO change to 0x55d398326f99059fF775485246999027B3197955
-        USDT = IBEP20(0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C);
-        // TODO change to 0xC5A35FC58EFDC4B88DDCA51AcACd2E8F593504bE
-        priceFeedBnb = AggregatorV3Interface(
-            0xb39B176130aCFd652F228D45b634A5fB1bE3bb11
-        );
+        BTC20X = IERC20(BTC20X_);
+        USDT = IERC20(USDT_);
+        priceFeedETH = AggregatorV3Interface(priceFeed_);
         referrerPercentage = 10_00;
         airDropRefPercentage = 0;
         percentageDivider = 100_00;
@@ -205,14 +201,14 @@ contract Presale {
 
         require(
             numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
-            "BEP20: Amount not correct"
+            "Presale: Amount not correct"
         );
         require(
             numberOfTokens + soldToken <= tokenHardCap &&
                 _amount + amountRaised <= UsdtHardCap,
             "Exceeding HardCap"
         );
-        require(block.timestamp < preSaleTime, "BEP20: PreSale over");
+        require(block.timestamp < preSaleTime, "Presale: PreSale over");
         if (!user.isExists) {
             user.isExists = true;
             totalBuyer++;
@@ -225,48 +221,48 @@ contract Presale {
     }
 
     // to buy BTC20X during preSale time
-    function buyWithBNB(address _referrer) public payable {
+    function buyWithETH(address _referrer) public payable {
         UserInfo storage user = users[msg.sender];
         setReferrer(msg.sender, _referrer, msg.value, false);
-        uint256 numberOfTokens = bnbToToken(msg.value);
+        uint256 numberOfTokens = ethToToken(msg.value);
 
         require(
             numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
-            "BEP20: Amount not correct"
+            "Presale: Amount not correct"
         );
         require(
             numberOfTokens + soldToken <= tokenHardCap &&
-                bnbToUsdt(msg.value) + amountRaised <= UsdtHardCap,
+                ethToUsdt(msg.value) + amountRaised <= UsdtHardCap,
             "Exceeding HardCap"
         );
-        require(block.timestamp < preSaleTime, "BEP20: PreSale over");
+        require(block.timestamp < preSaleTime, "Presale: PreSale over");
         if (!user.isExists) {
             user.isExists = true;
             totalBuyer++;
         }
-        amountRaised += bnbToUsdt(msg.value);
+        amountRaised += ethToUsdt(msg.value);
         user.claimAbleAmount += numberOfTokens;
         soldToken = soldToken.add(numberOfTokens);
-        emit BuyToken(msg.sender, bnbToToken(msg.value));
+        emit BuyToken(msg.sender, ethToToken(msg.value));
     }
 
-    // to check number of BTC20X for given BNB
-    function bnbToToken(uint256 _amount) public view returns (uint256) {
+    // to check number of BTC20X for given ETH
+    function ethToToken(uint256 _amount) public view returns (uint256) {
         uint256 numberOfTokens = _amount
-            .mul(getLatestPriceBnb())
+            .mul(getLatestPriceETH())
             .mul(tokenPerUsd)
             .div(1e8);
         return numberOfTokens;
     }
 
-    // to get real time price of BNB
-    function getLatestPriceBnb() public view returns (uint256) {
-        (, int256 price, , , ) = priceFeedBnb.latestRoundData();
+    // to get real time price of ETH
+    function getLatestPriceETH() public view returns (uint256) {
+        (, int256 price, , , ) = priceFeedETH.latestRoundData();
         return uint256(price);
     }
 
-    function bnbToUsdt(uint256 _value) public view returns (uint256) {
-        uint256 numberOfUSDT = _value.mul(getLatestPriceBnb()).div(1e8);
+    function ethToUsdt(uint256 _value) public view returns (uint256) {
+        uint256 numberOfUSDT = _value.mul(getLatestPriceETH()).div(1e8);
         return numberOfUSDT;
     }
 
@@ -313,7 +309,7 @@ contract Presale {
                 );
             } else {
                 users[user.referrer].referrerReward +=
-                    (bnbToToken(_amount) * referrerPercentage) /
+                    (ethToToken(_amount) * referrerPercentage) /
                     percentageDivider;
             }
         }
@@ -330,9 +326,9 @@ contract Presale {
         UserInfo storage user = users[msg.sender];
         require(user.isExists, "No Existence Found!");
         require(!user.claimedAirdrop, "Already claimed");
-        IBEP20(BTC20X).transferFrom(owner, msg.sender, airDropAmount);
+        IERC20(BTC20X).transferFrom(owner, msg.sender, airDropAmount);
         if (user.referrer != address(0)) {
-            IBEP20(BTC20X).transferFrom(
+            IERC20(BTC20X).transferFrom(
                 owner,
                 user.referrer,
                 (airDropAmount * airDropRefPercentage) / percentageDivider
@@ -392,9 +388,9 @@ contract Presale {
         address _btc20x,
         address _aggregator
     ) public onlyOwner {
-        USDT = IBEP20(_usdt);
-        BTC20X = IBEP20(_btc20x);
-        priceFeedBnb = AggregatorV3Interface(_aggregator);
+        USDT = IERC20(_usdt);
+        BTC20X = IERC20(_btc20x);
+        priceFeedETH = AggregatorV3Interface(_aggregator);
     }
 
     function totalSupply() external view returns (uint256) {
@@ -405,7 +401,7 @@ contract Presale {
         return block.timestamp;
     }
 
-    function contractBalanceBnb() external view returns (uint256) {
+    function contractBalanceETH() external view returns (uint256) {
         return address(this).balance;
     }
 

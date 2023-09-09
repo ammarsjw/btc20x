@@ -2,9 +2,33 @@ const hre = require("hardhat")
 
 
 async function main() {
+    // Constructor arguments
+    const networkName = hre.network.name
+    let desiredGasPrice
+    let usdtAddress
+    let aggregatorAddress
+    if (networkName == "goerli") {
+        usdtAddress = "0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C"
+        aggregatorAddress = "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e"
+        desiredGasPrice = 1
+    } else if (networkName == "bsc_testnet") {
+        usdtAddress = "0xDc0bB06740e6C1f5bFa0a9220bbCf2292727Bbdb"
+        aggregatorAddress = "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526"
+        desiredGasPrice = 5
+    } else if (networkName == "mainnet") {
+        usdtAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        aggregatorAddress = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
+        desiredGasPrice = 30
+    } else if (networkName == "bsc") {
+        usdtAddress = "0x55d398326f99059fF775485246999027B3197955"
+        aggregatorAddress = "0xC5A35FC58EFDC4B88DDCA51AcACd2E8F593504bE"
+        desiredGasPrice = 3
+    }
+
+
     // Checking gas price
-    let desiredGasPrice = 3
     await checkGasPrice(desiredGasPrice)
+    console.log("Chain:", networkName)
 
 
     // Contracts
@@ -28,7 +52,7 @@ async function main() {
 
 
     // Deploying Presale
-    const presaleContract = await hre.ethers.deployContract("Presale", [btc20xAddress])
+    const presaleContract = await hre.ethers.deployContract("Presale", [btc20xAddress, usdtAddress, aggregatorAddress])
     await presaleContract.waitForDeployment()
     const presaleDeployTxHash = await presaleContract.deploymentTransaction().hash
     const presaleDeployTx = await hre.ethers.provider.getTransactionReceipt(presaleDeployTxHash)
@@ -44,7 +68,7 @@ async function main() {
     // Verifying contracts
     await new Promise(resolve => setTimeout(resolve, 20000))
     await verify(btc20xAddress, [])
-    await verify(presaleAddress, [btc20xAddress])
+    await verify(presaleAddress, [btc20xAddress, usdtAddress, aggregatorAddress])
 
 
     process.exit()

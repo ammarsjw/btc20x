@@ -21,12 +21,21 @@ module.exports = {
             url: process.env.URL_GOERLI,
             accounts: [process.env.PRIVATE_KEY_GOERLI],
         },
+        bsc_testnet: {
+            url: process.env.URL_BSC_TESTNET,
+            accounts: [process.env.PRIVATE_KEY_BSC_TESTNET],
+        },
+        mainnet: {
+            url: process.env.URL_MAINNET,
+            accounts: [process.env.PRIVATE_KEY_MAINNET],
+        },
         bsc: {
             url: process.env.URL_BSC,
             accounts: [process.env.PRIVATE_KEY_BSC],
         },
     },
     etherscan: {
-        apiKey: process.env.BLOCK_EXPLORER_API_KEY_GOERLI
+        // apiKey: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM
+        apiKey: process.env.BLOCK_EXPLORER_API_KEY_BSC
     },
 };
