@@ -662,7 +662,7 @@ contract Presale {
             1e18
         );
         uint256 numberOfTokens = ethToUsd.mul(tokenPerUsd);
-        return numberOfTokens.mul(10**BTC20X.decimals()).div(precision);
+        return numberOfTokens.mul(10 ** BTC20X.decimals()).div(precision);
     }
 
     receive() external payable {}
@@ -680,7 +680,10 @@ contract Presale {
     function claim() public {
         UserInfo storage user = users[msg.sender];
         require(user.isExists, "Presale: Did not buy");
-        require(block.timestamp >= presaleTime, "Presale: Wait for the presale endtime");
+        require(
+            block.timestamp >= presaleTime,
+            "Presale: Wait for the presale endtime"
+        );
         require(
             user.referrerReward > 0 || user.claimAbleAmount > 0,
             "Presale: Already claimed"
@@ -728,9 +731,9 @@ contract Presale {
 
     function usdtToToken(uint256 _amount) public view returns (uint256) {
         uint256 numberOfTokens = _amount.mul(tokenPerUsd).div(
-            10**USDT.decimals()
+            10 ** USDT.decimals()
         );
-        return numberOfTokens.mul(10**BTC20X.decimals());
+        return numberOfTokens.mul(10 ** BTC20X.decimals());
     }
 
     function airDrop() external {
@@ -754,18 +757,18 @@ contract Presale {
     }
 
     function changeAirDropAmount(uint256 _amount) external onlyOwner {
-        airDropAmount = _amount * 10**BTC20X.decimals();
+        airDropAmount = _amount * 10 ** BTC20X.decimals();
     }
 
-    function setPresaleAmount(uint256 _minAmount, uint256 _maxAmount)
-        external
-        onlyOwner
-    {
+    function setPresaleAmount(
+        uint256 _minAmount,
+        uint256 _maxAmount
+    ) external onlyOwner {
         minAmount = _minAmount;
         maxAmount = _maxAmount;
     }
 
-    function setpresaleTime(uint256 _time) external onlyOwner {
+    function setPresaleTime(uint256 _time) external onlyOwner {
         presaleTime = _time;
     }
 
@@ -780,20 +783,16 @@ contract Presale {
         return true;
     }
 
-    function transferUSDTFunds(uint256 _value)
-        external
-        onlyOwner
-        returns (bool)
-    {
+    function transferUSDTFunds(
+        uint256 _value
+    ) external onlyOwner returns (bool) {
         USDT.safeTransfer(owner, _value);
         return true;
     }
 
-    function transferStuckFunds(uint256 _value)
-        external
-        onlyOwner
-        returns (bool)
-    {
+    function transferStuckFunds(
+        uint256 _value
+    ) external onlyOwner returns (bool) {
         BTC20X.transfer(owner, _value);
         return true;
     }
@@ -824,7 +823,9 @@ contract Presale {
         return BTC20X.allowance(owner, address(this));
     }
 
-    function getUserInfo(address _user)
+    function getUserInfo(
+        address _user
+    )
         public
         view
         returns (
