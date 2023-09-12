@@ -1,6 +1,6 @@
-//SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: MIT Licensed
 
-pragma solidity 0.8.7;
+pragma solidity ^0.8.0;
 
 interface IERC20 {
     function decimals() external view returns (uint8);
@@ -9,15 +9,14 @@ interface IERC20 {
 
     function balanceOf(address account) external view returns (uint256);
 
-    function transfer(
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
+    function transfer(address recipient, uint256 amount)
+        external
+        returns (bool);
 
-    function allowance(
-        address owner,
-        address spender
-    ) external view returns (uint256);
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
 
     function approve(address spender, uint256 amount) external returns (bool);
 
@@ -36,355 +35,414 @@ interface IERC20 {
     );
 }
 
-interface AggregatorV3Interface {
-    function decimals() external view returns (uint8);
+interface IERC20Permit {
+    /**
+     * @dev Sets `value` as the allowance of `spender` over ``owner``'s tokens,
+     * given ``owner``'s signed approval.
+     *
+     * IMPORTANT: The same issues {IERC20-approve} has related to transaction
+     * ordering also apply here.
+     *
+     * Emits an {Approval} event.
+     *
+     * Requirements:
+     *
+     * - `spender` cannot be the zero address.
+     * - `deadline` must be a timestamp in the future.
+     * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`
+     * over the EIP712-formatted function arguments.
+     * - the signature must use ``owner``'s current nonce (see {nonces}).
+     *
+     * For more information on the signature format, see the
+     * https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP
+     * section].
+     */
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
 
-    function description() external view returns (string memory);
+    /**
+     * @dev Returns the current nonce for `owner`. This value must be
+     * included whenever a signature is generated for {permit}.
+     *
+     * Every successful call to {permit} increases ``owner``'s nonce by one. This
+     * prevents a signature from being used multiple times.
+     */
+    function nonces(address owner) external view returns (uint256);
 
-    function version() external view returns (uint256);
-
-    function getRoundData(
-        uint80 _roundId
-    )
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
-
-    function latestRoundData()
-        external
-        view
-        returns (
-            uint80 roundId,
-            int256 answer,
-            uint256 startedAt,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        );
+    /**
+     * @dev Returns the domain separator used in the encoding of the signature for {permit}, as defined by {EIP712}.
+     */
+    // solhint-disable-next-line func-name-mixedcase
+    function DOMAIN_SEPARATOR() external view returns (bytes32);
 }
 
-contract Presale {
-    using SafeMath for uint256;
+library Address {
+    /**
+     * @dev Returns true if `account` is a contract.
+     *
+     * [IMPORTANT]
+     * ====
+     * It is unsafe to assume that an address for which this function returns
+     * false is an externally-owned account (EOA) and not a contract.
+     *
+     * Among others, `isContract` will return false for the following
+     * types of addresses:
+     *
+     *  - an externally-owned account
+     *  - a contract in construction
+     *  - an address where a contract will be created
+     *  - an address where a contract lived, but was destroyed
+     *
+     * Furthermore, `isContract` will also return true if the target contract within
+     * the same transaction is already scheduled for destruction by `SELFDESTRUCT`,
+     * which only has an effect at the end of a transaction.
+     * ====
+     *
+     * [IMPORTANT]
+     * ====
+     * You shouldn't rely on `isContract` to protect against flash loan attacks!
+     *
+     * Preventing calls from contracts is highly discouraged. It breaks composability, breaks support for smart wallets
+     * like Gnosis Safe, and does not provide security since it can be circumvented by calling from a contract
+     * constructor.
+     * ====
+     */
+    function isContract(address account) internal view returns (bool) {
+        // This method relies on extcodesize/address.code.length, which returns 0
+        // for contracts in construction, since the code is only stored at the end
+        // of the constructor execution.
 
-    IERC20 public BTC20X;
-    IERC20 public USDT;
-
-    AggregatorV3Interface public priceFeedETH;
-
-    uint256 public totalBuyer;
-
-    address payable public owner;
-
-    uint256 public referrerPercentage;
-    uint256 public airDropRefPercentage;
-    uint256 public percentageDivider;
-    uint256 public tokenPerUsd;
-    uint256 public airDropAmount;
-    uint256 public minAmount;
-    uint256 public maxAmount;
-    uint256 public presaleTime;
-    uint256 public soldToken;
-    uint256 public tokenHardCap;
-    uint256 public UsdtHardCap;
-    uint256 public amountRaised;
-
-    struct UserInfo {
-        uint256 claimAbleAmount;
-        address referrer;
-        uint256 referrerReward;
-        bool claimedAirdrop;
-        bool isExists;
+        return account.code.length > 0;
     }
 
-    mapping(address => UserInfo) users;
+    /**
+     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
+     * `recipient`, forwarding all available gas and reverting on errors.
+     *
+     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
+     * of certain opcodes, possibly making contracts go over the 2300 gas limit
+     * imposed by `transfer`, making them unable to receive funds via
+     * `transfer`. {sendValue} removes this limitation.
+     *
+     * https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+     *
+     * IMPORTANT: because control is transferred to `recipient`, care must be
+     * taken to not create reentrancy vulnerabilities. Consider using
+     * {ReentrancyGuard} or the
+     * https://solidity.readthedocs.io/en/v0.8.0/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+     */
+    function sendValue(address payable recipient, uint256 amount) internal {
+        require(address(this).balance >= amount, "Address: insufficient balance");
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Presale: Not an owner");
-        _;
+        (bool success, ) = recipient.call{value: amount}("");
+        require(success, "Address: unable to send value, recipient may have reverted");
     }
 
-    event BuyToken(address _user, uint256 _amount);
-
-    constructor(address BTC20X_, address USDT_, address priceFeed_) {
-        owner = payable(msg.sender);
-        BTC20X = IERC20(BTC20X_);
-        USDT = IERC20(USDT_);
-        priceFeedETH = AggregatorV3Interface(priceFeed_);
-        referrerPercentage = 10_00;
-        airDropRefPercentage = 0;
-        percentageDivider = 100_00;
-        airDropAmount = 0;
-        tokenPerUsd = 1;
-        UsdtHardCap = type(uint256).max;
-        tokenHardCap = type(uint256).max;
-        minAmount = 0;
-        maxAmount = type(uint256).max;
-        presaleTime = type(uint256).max;
+    /**
+     * @dev Performs a Solidity function call using a low level `call`. A
+     * plain `call` is an unsafe replacement for a function call: use this
+     * function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, "Address: low-level call failed");
     }
 
-    function buyToken(uint256 _amount, address _referrer) public {
-        UserInfo storage user = users[msg.sender];
-        setReferrer(msg.sender, _referrer, _amount, true);
-        uint256 numberOfTokens = usdtToToken(_amount);
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+     * `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, errorMessage);
+    }
 
-        require(
-            numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
-            "Presale: Amount not correct"
-        );
-        require(
-            numberOfTokens + soldToken <= tokenHardCap &&
-                _amount + amountRaised <= UsdtHardCap,
-            "Exceeding HardCap"
-        );
-        require(block.timestamp < presaleTime, "Presale: Presale over");
-        if (!user.isExists) {
-            user.isExists = true;
-            totalBuyer++;
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
+     *
+     * Requirements:
+     *
+     * - the calling contract must have an ETH balance of at least `value`.
+     * - the called Solidity function must be `payable`.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        require(address(this).balance >= value, "Address: insufficient balance for call");
+        (bool success, bytes memory returndata) = target.call{value: value}(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+        return functionStaticCall(target, data, "Address: low-level static call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
+        (bool success, bytes memory returndata) = target.staticcall(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
+        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a delegate call.
+     *
+     * _Available since v3.4._
+     */
+    function functionDelegateCall(
+        address target,
+        bytes memory data,
+        string memory errorMessage
+    ) internal returns (bytes memory) {
+        (bool success, bytes memory returndata) = target.delegatecall(data);
+        return verifyCallResultFromTarget(target, success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Tool to verify that a low level call to smart-contract was successful, and revert (either by bubbling
+     * the revert reason or using the provided one) in case of unsuccessful call or if target was not a contract.
+     *
+     * _Available since v4.8._
+     */
+    function verifyCallResultFromTarget(
+        address target,
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal view returns (bytes memory) {
+        if (success) {
+            if (returndata.length == 0) {
+                // only check isContract if the call was successful and the return data is empty
+                // otherwise we already know that it was a contract
+                require(isContract(target), "Address: call to non-contract");
+            }
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
         }
-        USDT.transferFrom(msg.sender, address(this), _amount);
-        amountRaised += _amount;
-        user.claimAbleAmount += numberOfTokens;
-        soldToken = soldToken.add(numberOfTokens);
-        emit BuyToken(msg.sender, usdtToToken(_amount));
     }
 
-    // to buy BTC20X during presale time
-    function buyWithETH(address _referrer) public payable {
-        UserInfo storage user = users[msg.sender];
-        setReferrer(msg.sender, _referrer, msg.value, false);
-        uint256 numberOfTokens = ethToToken(msg.value);
-
-        require(
-            numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
-            "Presale: Amount not correct"
-        );
-        require(
-            numberOfTokens + soldToken <= tokenHardCap &&
-                ethToUsdt(msg.value) + amountRaised <= UsdtHardCap,
-            "Exceeding HardCap"
-        );
-        require(block.timestamp < presaleTime, "Presale: Presale over");
-        if (!user.isExists) {
-            user.isExists = true;
-            totalBuyer++;
+    /**
+     * @dev Tool to verify that a low level call was successful, and revert if it wasn't, either by bubbling the
+     * revert reason or using the provided one.
+     *
+     * _Available since v4.3._
+     */
+    function verifyCallResult(
+        bool success,
+        bytes memory returndata,
+        string memory errorMessage
+    ) internal pure returns (bytes memory) {
+        if (success) {
+            return returndata;
+        } else {
+            _revert(returndata, errorMessage);
         }
-        amountRaised += ethToUsdt(msg.value);
-        user.claimAbleAmount += numberOfTokens;
-        soldToken = soldToken.add(numberOfTokens);
-        emit BuyToken(msg.sender, ethToToken(msg.value));
     }
 
-    // to check number of BTC20X for given ETH
-    function ethToToken(uint256 _amount) public view returns (uint256) {
-        uint256 numberOfTokens = _amount
-            .mul(getLatestPriceETH())
-            .mul(tokenPerUsd)
-            .div(1e8);
-        return numberOfTokens;
+    function _revert(bytes memory returndata, string memory errorMessage) private pure {
+        // Look for revert reason and bubble it up if present
+        if (returndata.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            /// @solidity memory-safe-assembly
+            assembly {
+                let returndata_size := mload(returndata)
+                revert(add(32, returndata), returndata_size)
+            }
+        } else {
+            revert(errorMessage);
+        }
+    }
+}
+
+library SafeERC20 {
+    using Address for address;
+
+    /**
+     * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     */
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
-    // to get real time price of ETH
-    function getLatestPriceETH() public view returns (uint256) {
-        (, int256 price, , , ) = priceFeedETH.latestRoundData();
-        return uint256(price);
+    /**
+     * @dev Transfer `value` amount of `token` from `from` to `to`, spending the approval given by `from` to the
+     * calling contract. If `token` returns no value, non-reverting calls are assumed to be successful.
+     */
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        _callOptionalReturn(token, abi.encodeWithSelector(token.transferFrom.selector, from, to, value));
     }
 
-    function ethToUsdt(uint256 _value) public view returns (uint256) {
-        uint256 numberOfUSDT = _value.mul(getLatestPriceETH()).div(1e8);
-        return numberOfUSDT;
-    }
-
-    function claim() public {
-        UserInfo storage user = users[msg.sender];
-        require(user.isExists, "Didn't bought");
-        require(block.timestamp >= presaleTime, "Wait for the Presale endtime");
+    /**
+     * @dev Deprecated. This function has issues similar to the ones found in
+     * {IERC20-approve}, and its usage is discouraged.
+     *
+     * Whenever possible, use {safeIncreaseAllowance} and
+     * {safeDecreaseAllowance} instead.
+     */
+    function safeApprove(IERC20 token, address spender, uint256 value) internal {
+        // safeApprove should only be called when setting an initial allowance,
+        // or when resetting it to zero. To increase and decrease it, use
+        // 'safeIncreaseAllowance' and 'safeDecreaseAllowance'
         require(
-            user.referrerReward > 0 || user.claimAbleAmount > 0,
-            "Amount Already claimed"
+            (value == 0) || (token.allowance(address(this), spender) == 0),
+            "SafeERC20: approve from non-zero to non-zero allowance"
         );
-        if (user.referrerReward > 0) {
-            BTC20X.transferFrom(owner, msg.sender, user.referrerReward);
-        }
-        if (user.claimAbleAmount > 0) {
-            BTC20X.transferFrom(owner, msg.sender, user.claimAbleAmount);
-        }
-        user.claimAbleAmount = 0;
-        user.referrerReward = 0;
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, value));
     }
 
-    function setReferrer(
-        address _user,
-        address _referrer,
-        uint256 _amount,
-        bool _val
+    /**
+     * @dev Increase the calling contract's allowance toward `spender` by `value`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     */
+    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        uint256 oldAllowance = token.allowance(address(this), spender);
+        _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, oldAllowance + value));
+    }
+
+    /**
+     * @dev Decrease the calling contract's allowance toward `spender` by `value`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful.
+     */
+    function safeDecreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+        unchecked {
+            uint256 oldAllowance = token.allowance(address(this), spender);
+            require(oldAllowance >= value, "SafeERC20: decreased allowance below zero");
+            _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, oldAllowance - value));
+        }
+    }
+
+    /**
+     * @dev Set the calling contract's allowance toward `spender` to `value`. If `token` returns no value,
+     * non-reverting calls are assumed to be successful. Meant to be used with tokens that require the approval
+     * to be set to zero before setting it to a non-zero value, such as USDT.
+     */
+    function forceApprove(IERC20 token, address spender, uint256 value) internal {
+        bytes memory approvalCall = abi.encodeWithSelector(token.approve.selector, spender, value);
+
+        if (!_callOptionalReturnBool(token, approvalCall)) {
+            _callOptionalReturn(token, abi.encodeWithSelector(token.approve.selector, spender, 0));
+            _callOptionalReturn(token, approvalCall);
+        }
+    }
+
+    /**
+     * @dev Use a ERC-2612 signature to set the `owner` approval toward `spender` on `token`.
+     * Revert on invalid signature.
+     */
+    function safePermit(
+        IERC20Permit token,
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) internal {
-        UserInfo storage user = users[_user];
-        if (user.referrer == address(0)) {
-            if (
-                _referrer != _user &&
-                users[_referrer].isExists &&
-                msg.sender != users[_referrer].referrer
-            ) {
-                user.referrer = _referrer;
-            } else {
-                user.referrer = address(0);
-            }
-        }
-        if (user.referrer != address(0)) {
-            if (_val) {
-                users[user.referrer].referrerReward += usdtToToken(
-                    (_amount * referrerPercentage) / percentageDivider
-                );
-            } else {
-                users[user.referrer].referrerReward +=
-                    (ethToToken(_amount) * referrerPercentage) /
-                    percentageDivider;
-            }
-        }
+        uint256 nonceBefore = token.nonces(owner);
+        token.permit(owner, spender, value, deadline, v, r, s);
+        uint256 nonceAfter = token.nonces(owner);
+        require(nonceAfter == nonceBefore + 1, "SafeERC20: permit did not succeed");
     }
 
-    function usdtToToken(uint256 _amount) public view returns (uint256) {
-        uint256 numberOfTokens = _amount.mul(tokenPerUsd).div(
-            10 ** USDT.decimals()
-        );
-        return numberOfTokens.mul(10 ** BTC20X.decimals());
+    /**
+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+     * on the return value: the return value is optional (but if data is returned, it must not be false).
+     * @param token The token targeted by the call.
+     * @param data The call data (encoded using abi.encode or one of its variants).
+     */
+    function _callOptionalReturn(IERC20 token, bytes memory data) private {
+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+        // we're implementing it ourselves. We use {Address-functionCall} to perform this call, which verifies that
+        // the target address contains contract code and also asserts for success in the low-level call.
+
+        bytes memory returndata = address(token).functionCall(data, "SafeERC20: low-level call failed");
+        require(returndata.length == 0 || abi.decode(returndata, (bool)), "SafeERC20: ERC20 operation did not succeed");
     }
 
-    function airDrop() external {
-        UserInfo storage user = users[msg.sender];
-        require(user.isExists, "No Existence Found!");
-        require(!user.claimedAirdrop, "Already claimed");
-        IERC20(BTC20X).transferFrom(owner, msg.sender, airDropAmount);
-        if (user.referrer != address(0)) {
-            IERC20(BTC20X).transferFrom(
-                owner,
-                user.referrer,
-                (airDropAmount * airDropRefPercentage) / percentageDivider
-            );
-        }
-        user.claimedAirdrop = true;
-    }
+    /**
+     * @dev Imitates a Solidity high-level call (i.e. a regular function call to a contract), relaxing the requirement
+     * on the return value: the return value is optional (but if data is returned, it must not be false).
+     * @param token The token targeted by the call.
+     * @param data The call data (encoded using abi.encode or one of its variants).
+     *
+     * This is a variant of {_callOptionalReturn} that silents catches all reverts and returns a bool instead.
+     */
+    function _callOptionalReturnBool(IERC20 token, bytes memory data) private returns (bool) {
+        // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
+        // we're implementing it ourselves. We cannot use {Address-functionCall} here since this should return false
+        // and not revert is the subcall reverts.
 
-    // to change Price of the BTC20X
-    function changePrice(uint256 _tokenPerUsd) external onlyOwner {
-        tokenPerUsd = _tokenPerUsd;
-    }
-
-    function changeAirDropAmount(uint256 _amount) external onlyOwner {
-        airDropAmount = _amount * (10 ** BTC20X.decimals());
-    }
-
-    function setPresaleAmount(
-        uint256 _minAmount,
-        uint256 _maxAmount
-    ) external onlyOwner {
-        minAmount = _minAmount;
-        maxAmount = _maxAmount;
-    }
-
-    function setPresaleTime(uint256 _time) external onlyOwner {
-        presaleTime = _time;
-    }
-
-    // transfer ownership
-    function changeOwner(address payable _newOwner) external onlyOwner {
-        owner = _newOwner;
-    }
-
-    // to draw funds for liquidity
-    function transferFunds(uint256 _value) external onlyOwner returns (bool) {
-        owner.transfer(_value);
-        return true;
-    }
-
-    function transferUSDTFunds(
-        uint256 _value
-    ) external onlyOwner returns (bool) {
-        USDT.transfer(owner, _value);
-        return true;
-    }
-
-    function transferStuckFunds(
-        uint256 _value
-    ) external onlyOwner returns (bool) {
-        BTC20X.transfer(owner, _value);
-        return true;
-    }
-
-    function changeAddresses(
-        address _usdt,
-        address _btc20x,
-        address _aggregator
-    ) public onlyOwner {
-        USDT = IERC20(_usdt);
-        BTC20X = IERC20(_btc20x);
-        priceFeedETH = AggregatorV3Interface(_aggregator);
-    }
-
-    function totalSupply() external view returns (uint256) {
-        return BTC20X.totalSupply();
-    }
-
-    function getCurrentTime() public view returns (uint256) {
-        return block.timestamp;
-    }
-
-    function contractBalanceETH() external view returns (uint256) {
-        return address(this).balance;
-    }
-
-    function getContractTokenBalance() external view returns (uint256) {
-        return BTC20X.allowance(owner, address(this));
-    }
-
-    function getUserInfo(
-        address _user
-    )
-        public
-        view
-        returns (
-            uint256 _claimAbleAmount,
-            address _referrer,
-            uint256 _referrerReward,
-            bool _claimedAirdrop,
-            bool _isExists
-        )
-    {
-        UserInfo storage user = users[_user];
-        _claimAbleAmount = user.claimAbleAmount;
-        _referrer = user.referrer;
-        _referrerReward = user.referrerReward;
-        _claimedAirdrop = user.claimedAirdrop;
-        _isExists = user.isExists;
-    }
-
-    function setReferrerPercentage(
-        uint256 _airDropRefPercentage,
-        uint256 _referrerPercentage
-    ) public onlyOwner {
-        airDropRefPercentage = _airDropRefPercentage;
-        referrerPercentage = _referrerPercentage;
-    }
-
-    function setNewRound(
-        uint256 _tokenPerUsd,
-        uint256 _presaleTime,
-        uint256 _soldToken,
-        uint256 _tokenHardCap,
-        uint256 _UsdtHardCap,
-        uint256 _amountRaised
-    ) public onlyOwner {
-        tokenPerUsd = _tokenPerUsd;
-        presaleTime = _presaleTime;
-        soldToken = _soldToken;
-        tokenHardCap = _tokenHardCap;
-        UsdtHardCap = _UsdtHardCap;
-        amountRaised = _amountRaised;
+        (bool success, bytes memory returndata) = address(token).call(data);
+        return
+            success && (returndata.length == 0 || abi.decode(returndata, (bool))) && Address.isContract(address(token));
     }
 }
 
@@ -452,5 +510,360 @@ library SafeMath {
     ) internal pure returns (uint256) {
         require(b != 0, errorMessage);
         return a % b;
+    }
+}
+
+interface AggregatorV3Interface {
+    function decimals() external view returns (uint8);
+
+    function description() external view returns (string memory);
+
+    function version() external view returns (uint256);
+
+    function getRoundData(uint80 _roundId)
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        );
+
+    function latestRoundData()
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        );
+}
+
+contract Presale {
+    using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+    using Address for address payable;
+
+    IERC20 public BTC20X;
+    IERC20 public USDT;
+
+    AggregatorV3Interface public priceFeedETH;
+    uint256 public totalBuyer;
+
+    address payable public owner;
+
+    uint256 public referrerPercentage;
+    uint256 public airDropRefPercentage;
+    uint256 public percentageDivider;
+    uint256 public tokenPerUsd;
+    uint256 public airDropAmount;
+    uint256 public minAmount;
+    uint256 public maxAmount;
+    uint256 public presaleTime;
+    uint256 public soldToken;
+    uint256 public tokenHardCap;
+    uint256 public UsdtHardCap;
+    uint256 public amountRaised;
+
+    struct UserInfo {
+        uint256 claimAbleAmount;
+        address referrer;
+        uint256 referrerReward;
+        bool claimedAirdrop;
+        bool isExists;
+    }
+
+    mapping(address => UserInfo) users;
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Presale: Not an owner");
+        _;
+    }
+
+    event BuyToken(address _user, uint256 _amount);
+
+    constructor(address BTC20X_, address USDT_, address priceFeed_) {
+        owner = payable(msg.sender);
+        BTC20X = IERC20(BTC20X_);
+        USDT = IERC20(USDT_);
+        priceFeedETH = AggregatorV3Interface(priceFeed_);
+        referrerPercentage = 10_00;
+        airDropRefPercentage = 0;
+        percentageDivider = 100_00;
+        airDropAmount = 0;
+        tokenPerUsd = 1;
+        UsdtHardCap = type(uint256).max;
+        tokenHardCap = type(uint256).max;
+        minAmount = 0;
+        maxAmount = type(uint256).max;
+        presaleTime = type(uint256).max;
+    }
+
+    function buyToken(uint256 _amount, address _referrer) public {
+        UserInfo storage user = users[msg.sender];
+        setReferrer(msg.sender, _referrer, _amount, true);
+        uint256 numberOfTokens = usdtToToken(_amount);
+
+        require(
+            numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
+            "Presale: Amount not correct"
+        );
+        require(
+            numberOfTokens + soldToken <= tokenHardCap &&
+                _amount + amountRaised <= UsdtHardCap,
+            "Presale: Exceeding hardcap"
+        );
+        require(block.timestamp < presaleTime, "Presale: Presale over");
+        if (!user.isExists) {
+            user.isExists = true;
+            totalBuyer++;
+        }
+        USDT.safeTransferFrom(msg.sender, address(this), _amount);
+        amountRaised += _amount;
+        user.claimAbleAmount += numberOfTokens;
+        soldToken = soldToken.add(numberOfTokens);
+        emit BuyToken(msg.sender, usdtToToken(_amount));
+    }
+
+    // to buy BTC20X during presale time => for web3 use
+    function buyWithETH(address _referrer) public payable {
+        UserInfo storage user = users[msg.sender];
+        setReferrer(msg.sender, _referrer, msg.value, false);
+        uint256 numberOfTokens = ethToToken(msg.value);
+
+        require(
+            numberOfTokens >= minAmount && numberOfTokens <= maxAmount,
+            "Presale: Amount not correct"
+        );
+        require(
+            numberOfTokens + soldToken <= tokenHardCap &&
+                ethToUsdt(msg.value) + amountRaised <= UsdtHardCap,
+            "Presale: Exceeding hardcap"
+        );
+        require(block.timestamp < presaleTime, "Presale: Presale over");
+        if (!user.isExists) {
+            user.isExists = true;
+            totalBuyer++;
+        }
+        amountRaised += ethToUsdt(msg.value);
+        user.claimAbleAmount += numberOfTokens;
+        soldToken = soldToken.add(numberOfTokens);
+        emit BuyToken(msg.sender, ethToToken(msg.value));
+    }
+
+    // to check number of BTC20X for given ETH
+    function ethToToken(uint256 _amount) public view returns (uint256) {
+        uint256 precision = 1e4;
+        uint256 ethToUsd = precision.mul(_amount).mul(getLatestPriceETH()).div(
+            1e18
+        );
+        uint256 numberOfTokens = ethToUsd.mul(tokenPerUsd);
+        return numberOfTokens.mul(10**BTC20X.decimals()).div(precision);
+    }
+
+    receive() external payable {}
+
+    // to get real time price of ETH
+    function getLatestPriceETH() public view returns (uint256) {
+        (, int256 price, , , ) = priceFeedETH.latestRoundData();
+        return uint256(price).div(1e8);
+    }
+
+    function ethToUsdt(uint256 _value) public view returns (uint256 ethToUsd) {
+        return ethToUsd = (_value).mul(getLatestPriceETH());
+    }
+
+    function claim() public {
+        UserInfo storage user = users[msg.sender];
+        require(user.isExists, "Presale: Did not buy");
+        require(block.timestamp >= presaleTime, "Presale: Wait for the presale endtime");
+        require(
+            user.referrerReward > 0 || user.claimAbleAmount > 0,
+            "Presale: Already claimed"
+        );
+        if (user.referrerReward > 0) {
+            BTC20X.transferFrom(owner, msg.sender, user.referrerReward);
+        }
+        if (user.claimAbleAmount > 0) {
+            BTC20X.transferFrom(owner, msg.sender, user.claimAbleAmount);
+        }
+        user.claimAbleAmount = 0;
+        user.referrerReward = 0;
+    }
+
+    function setReferrer(
+        address _user,
+        address _referrer,
+        uint256 _amount,
+        bool _val
+    ) internal {
+        UserInfo storage user = users[_user];
+        if (user.referrer == address(0)) {
+            if (
+                _referrer != _user &&
+                users[_referrer].isExists &&
+                msg.sender != users[_referrer].referrer
+            ) {
+                user.referrer = _referrer;
+            } else {
+                user.referrer = address(0);
+            }
+        }
+        if (user.referrer != address(0)) {
+            if (_val) {
+                users[user.referrer].referrerReward += usdtToToken(
+                    (_amount * referrerPercentage) / percentageDivider
+                );
+            } else {
+                users[user.referrer].referrerReward +=
+                    (ethToToken(_amount) * referrerPercentage) /
+                    percentageDivider;
+            }
+        }
+    }
+
+    function usdtToToken(uint256 _amount) public view returns (uint256) {
+        uint256 numberOfTokens = _amount.mul(tokenPerUsd).div(
+            10**USDT.decimals()
+        );
+        return numberOfTokens.mul(10**BTC20X.decimals());
+    }
+
+    function airDrop() external {
+        UserInfo storage user = users[msg.sender];
+        require(user.isExists, "Presale: No existence found");
+        require(!user.claimedAirdrop, "Presale: Already claimed");
+        IERC20(BTC20X).transferFrom(owner, msg.sender, airDropAmount);
+        if (user.referrer != address(0)) {
+            IERC20(BTC20X).transferFrom(
+                owner,
+                user.referrer,
+                (airDropAmount * airDropRefPercentage) / percentageDivider
+            );
+        }
+        user.claimedAirdrop = true;
+    }
+
+    // to change Price of the BTC20X
+    function changePrice(uint256 _tokenPerUsd) external onlyOwner {
+        tokenPerUsd = _tokenPerUsd;
+    }
+
+    function changeAirDropAmount(uint256 _amount) external onlyOwner {
+        airDropAmount = _amount * 10**BTC20X.decimals();
+    }
+
+    function setPresaleAmount(uint256 _minAmount, uint256 _maxAmount)
+        external
+        onlyOwner
+    {
+        minAmount = _minAmount;
+        maxAmount = _maxAmount;
+    }
+
+    function setpresaleTime(uint256 _time) external onlyOwner {
+        presaleTime = _time;
+    }
+
+    // transfer ownership
+    function changeOwner(address payable _newOwner) external onlyOwner {
+        owner = _newOwner;
+    }
+
+    // to draw funds for liquidity
+    function transferFunds(uint256 _value) external onlyOwner returns (bool) {
+        owner.sendValue(_value);
+        return true;
+    }
+
+    function transferUSDTFunds(uint256 _value)
+        external
+        onlyOwner
+        returns (bool)
+    {
+        USDT.safeTransfer(owner, _value);
+        return true;
+    }
+
+    function transferStuckFunds(uint256 _value)
+        external
+        onlyOwner
+        returns (bool)
+    {
+        BTC20X.transfer(owner, _value);
+        return true;
+    }
+
+    function changeAddresses(
+        address _usdt,
+        address _btc20x,
+        address _aggregator
+    ) public onlyOwner {
+        USDT = IERC20(_usdt);
+        BTC20X = IERC20(_btc20x);
+        priceFeedETH = AggregatorV3Interface(_aggregator);
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return BTC20X.totalSupply();
+    }
+
+    function getCurrentTime() public view returns (uint256) {
+        return block.timestamp;
+    }
+
+    function contractBalanceETH() external view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getContractTokenBalance() external view returns (uint256) {
+        return BTC20X.allowance(owner, address(this));
+    }
+
+    function getUserInfo(address _user)
+        public
+        view
+        returns (
+            uint256 _claimAbleAmount,
+            address _referrer,
+            uint256 _referrerReward,
+            bool _claimedAirdrop,
+            bool _isExists
+        )
+    {
+        UserInfo storage user = users[_user];
+        _claimAbleAmount = user.claimAbleAmount;
+        _referrer = user.referrer;
+        _referrerReward = user.referrerReward;
+        _claimedAirdrop = user.claimedAirdrop;
+        _isExists = user.isExists;
+    }
+
+    function setReferrerPercentage(
+        uint256 _airDropRefPercentage,
+        uint256 _referrerPercentage
+    ) public onlyOwner {
+        airDropRefPercentage = _airDropRefPercentage;
+        referrerPercentage = _referrerPercentage;
+    }
+
+    function setNewRound(
+        uint256 _tokenPerUsd,
+        uint256 _presaleTime,
+        uint256 _soldToken,
+        uint256 _tokenHardCap,
+        uint256 _UsdtHardCap,
+        uint256 _amountRaised
+    ) public onlyOwner {
+        tokenPerUsd = _tokenPerUsd;
+        presaleTime = _presaleTime;
+        soldToken = _soldToken;
+        tokenHardCap = _tokenHardCap;
+        UsdtHardCap = _UsdtHardCap;
+        amountRaised = _amountRaised;
     }
 }
