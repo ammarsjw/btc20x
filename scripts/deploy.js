@@ -2,7 +2,7 @@ const hre = require("hardhat")
 
 
 async function main() {
-    // Constructor arguments
+    // Chain dependent variables
     const networkName = hre.network.name
     let desiredGasPrice
     let usdtAddress

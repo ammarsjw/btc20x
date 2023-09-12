@@ -41,7 +41,5 @@ module.exports = {
             mainnet: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM,
             bsc: process.env.BLOCK_EXPLORER_API_KEY_BSC,
         },
-        // apiKey: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM
-        // apiKey: process.env.BLOCK_EXPLORER_API_KEY_BSC
     },
 };
