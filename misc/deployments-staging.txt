@@ -1,9 +1,9 @@
 Contracts:
 Chain: goerli
-BTC20X deployed to: 0x928103bFC5ed01eAeC7071DA45ddcd236b04f101
-at block number: 9664897
-Presale deployed to: 0x8737c54337Cef70d82b75c6AbE708A24ed36941c
-at block number: 9664898
+BTC20X deployed to: 0x5422ca068DC63a25C4c156501c7Bb0c5ff475BA2
+at block number: 9681018
+Presale deployed to: 0x43eF9c571f587E3a5e34c1D7ACAe0198b182b7fB
+at block number: 9681019
 Chain: bsc_testnet
 BTC20X deployed to: 0xd99eE8005D2eFA62c9E5Cc9e3a69edF11608bdd1
 at block number: 33191216
@@ -13,8 +13,8 @@ at block number: 33191217
 
 Contracts:
 Chain: goerli
-BTC20X - https://goerli.etherscan.io/address/0x928103bFC5ed01eAeC7071DA45ddcd236b04f101#code
-Presale - https://goerli.etherscan.io/address/0x8737c54337Cef70d82b75c6AbE708A24ed36941c#code
+BTC20X - https://goerli.etherscan.io/address/0x5422ca068DC63a25C4c156501c7Bb0c5ff475BA2#code
+Presale - https://goerli.etherscan.io/address/0x43eF9c571f587E3a5e34c1D7ACAe0198b182b7fB#code
 Chain: bsc_testnet
 BTC20X - https://testnet.bscscan.com/address/0xd99eE8005D2eFA62c9E5Cc9e3a69edF11608bdd1#code
 Presale - https://testnet.bscscan.com/address/0xA1aBD715Df75C79DBA2b8B0981142Ec73C947B3A#code

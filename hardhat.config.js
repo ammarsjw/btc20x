@@ -35,7 +35,13 @@ module.exports = {
         },
     },
     etherscan: {
-        apiKey: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM
+        apiKey: {
+            goerli: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM,
+            bsc_testnet: process.env.BLOCK_EXPLORER_API_KEY_BSC,
+            mainnet: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM,
+            bsc: process.env.BLOCK_EXPLORER_API_KEY_BSC,
+        },
+        // apiKey: process.env.BLOCK_EXPLORER_API_KEY_ETHEREUM
         // apiKey: process.env.BLOCK_EXPLORER_API_KEY_BSC
     },
 };

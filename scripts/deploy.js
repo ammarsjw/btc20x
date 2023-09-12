@@ -8,7 +8,7 @@ async function main() {
     let usdtAddress
     let aggregatorAddress
     if (networkName == "goerli") {
-        usdtAddress = "0x0c48B9e41Fa2452158daB36096A5abf1C5Abf17C"
+        usdtAddress = "0x8F99C7556C4Fb70f4092534282B7B87c48fC9C2f"
         aggregatorAddress = "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e"
         desiredGasPrice = 1
     } else if (networkName == "bsc_testnet") {
