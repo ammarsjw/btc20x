@@ -76,32 +76,32 @@ async function main() {
 
 
 async function checkGasPrice(desiredGasPrice) {
-    let feeData = await hre.ethers.provider.getFeeData()
-    let gasPrice = hre.ethers.formatUnits(feeData.gasPrice, "gwei")
-    console.log("Gas Price:", gasPrice, "Gwei")
+    let feeData = await hre.ethers.provider.getFeeData();
+    let gasPrice = hre.ethers.formatUnits(feeData.gasPrice, "gwei");
+    console.log("Gas Price:", gasPrice, "Gwei");
     while (gasPrice > desiredGasPrice) {
-        feeData = await hre.ethers.provider.getFeeData()
+        feeData = await hre.ethers.provider.getFeeData();
         if (gasPrice != hre.ethers.formatUnits(feeData.gasPrice, "gwei")) {
-            gasPrice = hre.ethers.formatUnits(feeData.gasPrice, "gwei")
-            console.log("Gas Price:", gasPrice, "Gwei")
+            gasPrice = hre.ethers.formatUnits(feeData.gasPrice, "gwei");
+            console.log("Gas Price:", gasPrice, "Gwei");
         }
     }
 }
 
 
 async function verify(address, constructorArguments) {
-    console.log(`verify ${address} with arguments ${constructorArguments.join(",")}`)
+    console.log(`verify ${address} with arguments ${constructorArguments.join(",")}`);
     try {
         await hre.run("verify:verify", {
             address,
             constructorArguments
-        })
+        });
     } catch(error) { console.log(error) }
 }
 
 
 main().catch((error) => {
-    console.error(error)
-    process.exitCode = 1
-    process.exit()
-})
+    console.error(error);
+    process.exitCode = 1;
+    process.exit();
+});
