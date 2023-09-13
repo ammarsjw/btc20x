@@ -4,25 +4,23 @@ const hre = require("hardhat");
 async function main() {
     // Chain dependent variables
     const networkName = hre.network.name;
-    let desiredGasPrice;
-    let usdtAddress;
-    let aggregatorAddress;
+    let desiredGasPrice, usdtAddress, aggregatorAddress;
     if (networkName == "goerli") {
+        desiredGasPrice = 1;
         usdtAddress = "0x8F99C7556C4Fb70f4092534282B7B87c48fC9C2f";
         aggregatorAddress = "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e";
-        desiredGasPrice = 1;
     } else if (networkName == "bsc_testnet") {
+        desiredGasPrice = 5;
         usdtAddress = "0xDc0bB06740e6C1f5bFa0a9220bbCf2292727Bbdb";
         aggregatorAddress = "0x2514895c72f50D8bd4B4F9b1110F0D6bD2c97526";
-        desiredGasPrice = 5;
     } else if (networkName == "mainnet") {
+        desiredGasPrice = 25;
         usdtAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7";
         aggregatorAddress = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
-        desiredGasPrice = 25;
     } else if (networkName == "bsc") {
+        desiredGasPrice = 3;
         usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
         aggregatorAddress = "0xC5A35FC58EFDC4B88DDCA51AcACd2E8F593504bE";
-        desiredGasPrice = 3;
     }
 
 
