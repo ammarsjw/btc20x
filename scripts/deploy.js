@@ -1,6 +1,5 @@
 const hre = require("hardhat");
 
-
 async function main() {
     // Chain dependent variables
     const networkName = hre.network.name;
@@ -86,7 +85,6 @@ async function checkGasPrice(desiredGasPrice) {
     }
 }
 
-
 async function verify(address, constructorArguments) {
     console.log(`verify ${address} with arguments ${constructorArguments.join(",")}`);
     try {
@@ -96,7 +94,6 @@ async function verify(address, constructorArguments) {
         });
     } catch(error) { console.log(error) }
 }
-
 
 main().catch((error) => {
     console.error(error);
