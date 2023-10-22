@@ -10,7 +10,6 @@ at block number: 33191216
 Presale deployed to: 0xA1aBD715Df75C79DBA2b8B0981142Ec73C947B3A
 at block number: 33191217
 
-
 - Contracts:
 - Chain: goerli
 BTC20X - https://goerli.etherscan.io/address/0x5422ca068DC63a25C4c156501c7Bb0c5ff475BA2#code
