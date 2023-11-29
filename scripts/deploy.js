@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 async function main() {
-    // Chain dependent variables
+    // Chain dependent variables.
     const networkName = hre.network.name;
     let desiredGasPrice
     let usdtAddress, aggregatorAddress;
@@ -29,13 +29,13 @@ async function main() {
     }
 
 
-    // Checking gas price
+    // Checking gas price.
     await checkGasPrice(desiredGasPrice);
     console.log("Chain:", networkName);
 
 
-    // Contracts
-    // Deploying BTC20X
+    // Contracts.
+    // Deploying BTC20X.
     const btc20xFactory = await hre.ethers.getContractFactory("BTC20X");
     const btc20xContract = await hre.upgrades.deployProxy(
         btc20xFactory,
@@ -49,12 +49,12 @@ async function main() {
     console.log("at block number:", btc20xDeployTx.blockNumber);
 
 
-    // Address
+    // Addresses.
     const btc20xAddress = btc20xContract.target;
     // const btc20xAddress = "";
 
 
-    // Deploying Presale
+    // Deploying Presale.
     const presaleContract = await hre.ethers.deployContract("Presale", [btc20xAddress, usdtAddress, aggregatorAddress]);
     await presaleContract.waitForDeployment();
     const presaleDeployTxHash = await presaleContract.deploymentTransaction().hash;
@@ -63,12 +63,12 @@ async function main() {
     console.log("at block number:", presaleDeployTx.blockNumber);
 
 
-    // Address
+    // Addresses.
     const presaleAddress = presaleContract.target;
     // const presaleAddress = "";
 
 
-    // Verifying contracts
+    // Verifying contracts.
     await new Promise(resolve => setTimeout(resolve, 20000));
     await verify(btc20xAddress, []);
     await verify(presaleAddress, [btc20xAddress, usdtAddress, aggregatorAddress]);
